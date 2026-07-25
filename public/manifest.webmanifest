@@ -1,10 +1,11 @@
 {
   "name": "Restaurant Menu",
   "short_name": "Menu",
-  "start_url": "/",
+  "start_url": "/menu",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "theme_color": "#2c3e2c",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/icon-192.png",

@@ -2,12 +2,18 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
-export function middleware(request) {
+export function proxy(request) {
   const token = request.cookies.get("auth-token")?.value;
   const { pathname } = request.nextUrl;
 
   // الصفحات العامة (بدون تسجيل دخول)
-  const publicPaths = ["/", "/login", "/menu"];
+const publicPaths = [
+  "/",
+  "/menu",
+  "/login",
+  "/manifest.webmanifest",
+  "/favicon.ico"
+];
   
   if (publicPaths.includes(pathname)) {
     // إذا كان مسجل دخول وحاول يفتح /login، نقله لـ Dashboard

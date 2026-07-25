@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - Restaurant Menu</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #2c3e2c 0%, #1a2a1a 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .offline-container {
+      background: white;
+      border-radius: 20px;
+      padding: 40px 30px;
+      text-align: center;
+      max-width: 500px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+    .offline-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+    h1 {
+      color: #2c3e2c;
+      margin-bottom: 10px;
+      font-size: 28px;
+    }
+    p {
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.6;
+    }
+    .button {
+      display: inline-block;
+      background: #2c3e2c;
+      color: white;
+      padding: 12px 30px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: background 0.3s;
+    }
+    .button:hover {
+      background: #1a2a1a;
+    }
+    .cached-menu {
+      margin-top: 30px;
+      padding-top: 30px;
+      border-top: 1px solid #eee;
+    }
+    .cached-menu p {
+      margin-bottom: 15px;
+      color: #999;
+      font-size: 14px;
+    }
+    .menu-link {
+      display: inline-block;
+      background: #8b5a2b;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+      transition: background 0.3s;
+    }
+    .menu-link:hover {
+      background: #6b4620;
+    }
+  </style>
+</head>
+<body>
+  <div class="offline-container">
+    <div class="offline-icon">📱</div>
+    <h1>You're Offline</h1>
+    <p>Looks like you don't have an active internet connection.</p>
+    <button class="button" onclick="location.reload()">Try Again</button>
+    
+    <div class="cached-menu">
+      <p>If you've visited the menu before, you can view it from cache:</p>
+      <a href="/menu" class="menu-link">📋 View Cached Menu</a>
+    </div>
+  </div>
+
+  <script>
+    // Redirect to menu if we go online
+    window.addEventListener('online', function() {
+      location.reload();
+    });
+  </script>
+</body>
+</html>
