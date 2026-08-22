@@ -52,6 +52,16 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  // Ignore service worker, Next internals, manifests, and normal page navigations
+  if (
+    url.pathname === '/api/sw' ||
+    url.pathname.startsWith('/_next/') ||
+    url.pathname === '/manifest.webmanifest' ||
+    request.mode === 'navigate'
+  ) {
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((response) => {
       // Return cached version if available

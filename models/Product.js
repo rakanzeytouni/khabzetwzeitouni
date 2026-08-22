@@ -2,29 +2,75 @@ import mongoose from "mongoose";
 
 const ProductSchema = new mongoose.Schema(
   {
-    name: {
+    // English fields
+    nameEn: {
       type: String,
       required: true,
+      trim: true,
+    },
+    descEn: {
+      type: String,
+      default: "",
+      trim: true,
     },
 
+    // Arabic fields
+    nameAr: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    descAr: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    // Price
+    price: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
+    cost: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    // Montage cost
+    montageCost: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    // Category
     category: {
       type: String,
-      required: true,
+      default: "General",
+      trim: true,
     },
 
-    salePrice: {
+    // Stock management
+    stock: {
       type: Number,
-      required: true,
+      default: 0,
+      min: 0,
     },
 
-    costPrice: {
-      type: Number,
-      required: true,
-    },
-
+    // Status
     active: {
       type: Boolean,
       default: true,
+      index: true,
+    },
+
+    // Image URL
+    image: {
+      type: String,
+      default: null,
     },
   },
   {

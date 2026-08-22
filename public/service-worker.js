@@ -44,28 +44,27 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip cross-origin requests
+  
   if (!url.origin.includes(self.location.origin)) {
     return;
   }
 
   event.respondWith(
     caches.match(request).then((response) => {
-      // Return cached version if available
+      
       if (response) {
         console.log('Serving from cache:', request.url);
         return response;
       }
 
-      // Try to fetch from network
       return fetch(request)
         .then((fetchResponse) => {
-          // Don't cache non-successful responses
+        
           if (!fetchResponse || fetchResponse.status !== 200) {
             return fetchResponse;
           }
 
-          // Clone and cache successful responses
+          
           const responseToCache = fetchResponse.clone();
           if (url.pathname === '/menu' || url.pathname === '/menu/') {
             caches.open(CACHE_NAME).then((cache) => {

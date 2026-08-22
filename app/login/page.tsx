@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+    e.preventDefault(); 
     setError("");
     setLoading(true);
 
@@ -35,7 +35,10 @@ export default function LoginPage() {
       // Redirect based on role
       if (data.user.role === "admin") {
         router.push("/admin/dashboard");
+      }if(data.user.role=="cashier"){
+        router.push("/cashier")
       } 
+
       
       router.refresh();
     } catch (err: unknown) {
@@ -58,12 +61,16 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo & Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex flex-col items-center justify-center w-32 h-32 rounded-full border-4 border-[#2c3e2c] bg-[#f4f1ea] mb-4 shadow-lg">
-            <h1 className="text-2xl font-extrabold text-[#2c3e2c] leading-tight">
-              خبزة<br/>
-              <span className="text-[#8b5a2b]">و</span><br/>
-              زيتونة
-            </h1>
+          <div className="inline-flex items-center justify-center w-40 h-40 rounded-full border-4 border-[#2c3e2c] bg-[#f4f1ea] mb-4 shadow-lg overflow-hidden">
+            <img
+              src="/logo.jpeg"
+              alt="Restaurant logo"
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                const target = e.currentTarget as HTMLImageElement;
+                target.src = '/logo-fallback.svg';
+              }}
+            />
           </div>
           <h2 className="text-3xl font-bold text-[#2c3e2c]">تسجيل الدخول</h2>
           <p className="text-[#6b7c6b] mt-2">نظام إدارة المطعم</p>
@@ -81,7 +88,7 @@ export default function LoginPage() {
                 type="text"
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full px-4 py-3 rounded-lg border-2 border-[#d1c4a9] focus:border-[#8b5a2b] focus:outline-none transition-colors text-right"
+                className="w-full px-4 py-3 rounded-lg border-2 border-[#d1c4a9] focus:border-[#8b5a2b] focus:outline-none transition-colors text-right text-stone-950"
                 placeholder="أدخل اسم المستخدم"
                 required
                 autoFocus
@@ -97,7 +104,7 @@ export default function LoginPage() {
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full px-4 py-3 rounded-lg border-2 border-[#d1c4a9] focus:border-[#8b5a2b] focus:outline-none transition-colors text-right"
+                className="w-full px-4 py-3 rounded-lg border-2 border-[#d1c4a9] focus:border-[#8b5a2b] focus:outline-none transition-colors text-right text-black"
                 placeholder="أدخل كلمة المرور"
                 required
               />

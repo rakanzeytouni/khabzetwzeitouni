@@ -45,7 +45,7 @@ export async function POST(req) {
         username: user.username, 
         role: user.role 
       },
-      process.env.JWT_SECRET || "your-secret-key-change-this",
+      process.env.JWT_SECRET,
       { expiresIn: "8h" }
     );
 
@@ -88,7 +88,7 @@ export async function GET(req) {
       return NextResponse.json({ authenticated: false });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "your-secret-key-change-this");
+    const decoded = jwt.verify(token, process.env.JWT_SECRET );
     
     const user = await User.findById(decoded.userId).select("-password");
     
