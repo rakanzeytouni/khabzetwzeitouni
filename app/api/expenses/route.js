@@ -4,7 +4,7 @@ import Expense from "@/models/Expense";
 export async function GET() {
 	try {
 		await connectDB();
-		const expenses = await Expense.find().sort({ date: -1 }).limit(500);
+		const expenses = await Expense.find().sort({ date: -1 });
 		return Response.json(expenses);
 	} catch (error) {
 		console.error("Error in GET /api/expenses:", error);

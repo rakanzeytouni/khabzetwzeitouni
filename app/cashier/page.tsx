@@ -1,6 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import ExpenseModal from "@/components/ExpenseModal";
+import LoanModal from "@/components/LoanModal";
 
 interface MenuItem {
   _id: string;
@@ -38,13 +41,18 @@ const EXCHANGE_RATE = 90000;
 
 
 export default function Cashier() {
+  const router = useRouter();
   const [products, setProducts] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("cash");
+  const [paymentCurrency, setPaymentCurrency] = useState<"lbp" | "usd">("lbp");
   const [amountPaid, setAmountPaid] = useState(0);
   const [customerName, setCustomerName] = useState("");
   const [showPayment, setShowPayment] = useState(false);
+  const [showExpenseModal, setShowExpenseModal] = useState(false);
+  const [showLoanModal, setShowLoanModal] = useState(false);
+  const [receiptToPrint, setReceiptToPrint] = useState<any | null>(null);
   const [addingCustomer, setAddingCustomer] = useState(false);
 
 
@@ -128,11 +136,12 @@ export default function Cashier() {
       subtotal,
       tax,
       totalAmount,
-      change: Math.max(0, amountPaid - totalAmount),
     };
   };
 
-  const { subtotal, tax, totalAmount, change } = calculateTotals();
+  const { subtotal, tax, totalAmount } = calculateTotals();
+  const paidAmountInLbp = paymentCurrency === "usd" ? amountPaid * EXCHANGE_RATE : amountPaid;
+  const change = Math.max(0, paidAmountInLbp - totalAmount);
 
   const completeSale = async () => {
     if (cart.length === 0) {
@@ -140,7 +149,7 @@ export default function Cashier() {
       return;
     }
 
-    if (amountPaid < totalAmount) {
+    if (paidAmountInLbp < totalAmount) {
       alert("المبلغ المدفوع أقل من الإجمالي");
       return;
     }
@@ -161,8 +170,11 @@ const uniqueSaleId = `SALE-${Date.now()}`;
         tax,
         totalAmount,
         paymentMethod,
-        amountPaid,
+        amountPaid: paidAmountInLbp,
+        amountPaidInput: amountPaid,
+        paymentCurrency,
         change,
+        changeInPaymentCurrency: paymentCurrency === "usd" ? change / EXCHANGE_RATE : change,
         customerName,
         cashierName: "كاشير",
         status: "completed",
@@ -176,22 +188,44 @@ const uniqueSaleId = `SALE-${Date.now()}`;
 
       if (!res.ok) throw new Error("Failed to complete sale");
 
-      // Print receipt
-      printReceipt(saleData);
-
       // Clear cart
       setCart([]);
       setAmountPaid(0);
+      setPaymentCurrency("lbp");
       setCustomerName("");
       setShowPayment(false);
-
-      alert("تم إكمال البيع بنجاح");
+      setReceiptToPrint(saleData);
     } catch (error) {
       console.error("Error completing sale:", error);
       alert("خطأ في إكمال البيع");
     } finally {
       setLoading(false);
     }
+  };
+
+  const openLoanModal = () => {
+    if (cart.length === 0) {
+      alert("السلة فارغة");
+      return;
+    }
+    setShowLoanModal(true);
+  };
+
+  const loanSaleData = {
+    saleId: `SALE-${Date.now()}`,
+    items: cart.map((item) => ({
+      productId: item._id,
+      productName: item.nameAr,
+      quantity: item.quantity,
+      unitPrice: item.price,
+      unitCost: item.cost ?? item.montageCost ?? 0,
+      totalPrice: item.price * item.quantity,
+    })),
+    subtotal,
+    tax,
+    totalAmount,
+    customerName,
+    cashierName: "كاشير",
   };
 
   const printReceipt = (saleData: any) => {
@@ -238,9 +272,11 @@ const uniqueSaleId = `SALE-${Date.now()}`;
             <p>الإجمالي (L.L.): ${saleData.totalAmount.toLocaleString()} L.L.</p>
             <p>الإجمالي (USD): $${(saleData.totalAmount / EXCHANGE_RATE).toFixed(2)}</p>
             <hr style="margin: 10px 0; border: 1px dashed #000;" />
-            <p>المبلغ المدفوع: ${saleData.amountPaid.toLocaleString()} L.L.</p>
-            <p>الباقي (L.L.): ${saleData.change.toLocaleString()} L.L.</p>
-            <p>الباقي (USD): $${(saleData.change / EXCHANGE_RATE).toFixed(2)}</p>
+            <p>المبلغ المدفوع: ${saleData.amountPaidInput.toLocaleString()} ${saleData.paymentCurrency === "usd" ? "$" : "L.L."}</p>
+            <p>قيمة المدفوع بالليرة: ${saleData.amountPaid.toLocaleString()} L.L.</p>
+            <p>الباقي: ${saleData.changeInPaymentCurrency.toLocaleString(undefined, { maximumFractionDigits: 2 })} ${saleData.paymentCurrency === "usd" ? "$" : "L.L."}</p>
+            <p>الباقي بالليرة: ${saleData.change.toLocaleString()} L.L.</p>
+            <p>الباقي بالدولار: $${(saleData.change / EXCHANGE_RATE).toFixed(2)}</p>
           </div>
           <div class="footer">
             <p>سعر الصرف: ${EXCHANGE_RATE.toLocaleString()} L.L.</p>
@@ -294,6 +330,12 @@ const uniqueSaleId = `SALE-${Date.now()}`;
             نقطة البيع
           </h1>
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={() => setShowExpenseModal(true)}
+              className="flex items-center justify-center bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-3 sm:px-6 rounded-lg shadow transition duration-200 text-sm sm:text-base"
+            >
+              مصروف
+            </button>
             <button
               onClick={addNewCustomer}
               disabled={addingCustomer}
@@ -434,18 +476,36 @@ const uniqueSaleId = `SALE-${Date.now()}`;
 
                 <div>
                   <label className="block text-gray-800 font-semibold mb-2">
-                    المبلغ المدفوع (L.L.)
+                    عملة الدفع
+                  </label>
+                  <select
+                    value={paymentCurrency}
+                    onChange={(e) => {
+                      setPaymentCurrency(e.target.value as "lbp" | "usd");
+                      setAmountPaid(0);
+                    }}
+                    className="w-full text-black font-medium border border-gray-400 rounded px-3 py-2"
+                  >
+                    <option value="lbp">ليرة لبنانية (L.L.)</option>
+                    <option value="usd">دولار أمريكي ($)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-gray-800 font-semibold mb-2">
+                    المبلغ المدفوع ({paymentCurrency === "usd" ? "$" : "L.L."})
                   </label>
                   <input
                     type="number"
                     value={amountPaid === 0 ? "" : amountPaid}
                     onChange={(e) => setAmountPaid(parseFloat(e.target.value) || 0)}
                     className="w-full text-black font-medium border border-gray-400 rounded px-3 py-2"
-                    step="1"
+                    min="0"
+                    step={paymentCurrency === "usd" ? "0.01" : "1"}
                   />
                 </div>
 
-                {amountPaid >= totalAmount && (
+                {paidAmountInLbp >= totalAmount && (
                   <div className="bg-green-100 border border-green-300 p-3 rounded flex justify-between items-center text-green-900 font-bold">
                     <span>الباقي:</span>
                     <div className="text-right">
@@ -457,10 +517,17 @@ const uniqueSaleId = `SALE-${Date.now()}`;
 
                 <button
                   onClick={completeSale}
-                  disabled={loading || amountPaid < totalAmount}
+                  disabled={loading || paidAmountInLbp < totalAmount}
                   className="w-full bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-bold py-2 rounded transition"
                 >
                   إتمام البيع
+                </button>
+
+                <button
+                  onClick={openLoanModal}
+                  className="w-full rounded bg-purple-600 py-2 font-bold text-white transition hover:bg-purple-700"
+                >
+                  تسجيل كقرض
                 </button>
 
                 <button
@@ -493,6 +560,56 @@ const uniqueSaleId = `SALE-${Date.now()}`;
           </div>
         </div>
       </div>
+      {showExpenseModal && (
+        <ExpenseModal
+          onClose={() => setShowExpenseModal(false)}
+          onSaved={() => {
+            setShowExpenseModal(false);
+            router.push("/expense");
+          }}
+        />
+      )}
+      {showLoanModal && (
+        <LoanModal
+          totalAmount={totalAmount}
+          sale={loanSaleData}
+          onClose={() => setShowLoanModal(false)}
+          onSaved={() => {
+            setCart([]);
+            setCustomerName("");
+            setShowLoanModal(false);
+            setShowPayment(false);
+            alert("تم تسجيل القرض بنجاح");
+          }}
+        />
+      )}
+      {receiptToPrint && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" dir="rtl">
+          <div className="w-full max-w-sm rounded-lg bg-white p-6 text-center shadow-xl">
+            <h2 className="text-xl font-bold text-gray-800">هل تريد طباعة البيع؟</h2>
+            <p className="mt-2 text-gray-600">تم حفظ البيع بنجاح</p>
+            <div className="mt-6 flex gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  printReceipt(receiptToPrint);
+                  setReceiptToPrint(null);
+                }}
+                className="flex-1 rounded bg-blue-600 py-2 font-bold text-white hover:bg-blue-700"
+              >
+                طباعة البيع
+              </button>
+              <button
+                type="button"
+                onClick={() => setReceiptToPrint(null)}
+                className="flex-1 rounded bg-gray-500 py-2 font-bold text-white hover:bg-gray-600"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

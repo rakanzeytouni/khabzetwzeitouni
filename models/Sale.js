@@ -79,7 +79,7 @@ const SaleSchema = new mongoose.Schema(
     // Payment Information
     paymentMethod: {
       type: String,
-      enum: ["cash", "card", "check", "online"],
+      enum: ["cash", "card", "check", "online", "loan"],
       required: true,
     },
     amountPaid: {

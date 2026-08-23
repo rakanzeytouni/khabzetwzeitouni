@@ -4,7 +4,7 @@ import Sale from "@/models/Sale";
 export async function GET(req: Request) {
   try {
     await connectDB();
-    const sales = await Sale.find().sort({ date: -1 }).limit(100);
+    const sales = await Sale.find().sort({ date: -1 });
     return Response.json(sales);
   } catch (error) {
     console.error("Error in GET /api/sales:", error);

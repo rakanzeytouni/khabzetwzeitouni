@@ -5,7 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 type ReportType = "activity" | "profit" | "cashflow";
 
 type Expense = {
+  _id?: string;
   amount?: number;
+  date?: string;
 };
 
 type Product = {
@@ -30,6 +32,12 @@ type Sale = {
 
 const EXCHANGE_RATE = 90000;
 
+const profitShares = [
+  { name: "Ziad", percentage: 40 },
+  { name: "George", percentage: 30 },
+  { name: "Faysal", percentage: 30 },
+];
+
 const formatCurrency = (amount: number) => {
   const value = Number(amount) || 0;
   return `L.L ${value.toLocaleString("en-US")} ($${(value / EXCHANGE_RATE).toFixed(2)})`;
@@ -45,6 +53,16 @@ const formatDate = (value?: string) => {
 
 const getSaleAmount = (sale: Sale) => sale.totalAmount ?? sale.amount ?? sale.subtotal ?? 0;
 
+const isWithinDateRange = (value: string | undefined, fromDate: string, toDate: string) => {
+  if (!fromDate && !toDate) return true;
+  if (!value) return false;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  const from = fromDate ? new Date(`${fromDate}T00:00:00`) : null;
+  const to = toDate ? new Date(`${toDate}T23:59:59.999`) : null;
+  return (!from || date >= from) && (!to || date <= to);
+};
+
 const getSaleCost = (sale: Sale, productCosts: Map<string, number>) =>
   (sale.items ?? []).reduce(
     (total, item) =>
@@ -57,6 +75,8 @@ export default function ReportsPage() {
   const [sales, setSales] = useState<Sale[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -90,8 +110,14 @@ export default function ReportsPage() {
   }, []);
 
   const completedSales = useMemo(
-    () => sales.filter((sale) => sale.status !== "cancelled" && sale.status !== "refunded"),
-    [sales]
+    () => sales.filter(
+      (sale) =>
+        sale.status !== "pending" &&
+        sale.status !== "cancelled" &&
+        sale.status !== "refunded" &&
+        isWithinDateRange(sale.date ?? sale.createdAt, fromDate, toDate)
+    ),
+    [sales, fromDate, toDate]
   );
   const totalRevenue = useMemo(
     () => completedSales.reduce((total, sale) => total + getSaleAmount(sale), 0),
@@ -107,8 +133,10 @@ export default function ReportsPage() {
     [completedSales, productCosts]
   );
   const totalExpenses = useMemo(
-    () => expenses.reduce((total, expense) => total + (expense.amount ?? 0), 0),
-    [expenses]
+    () => expenses
+      .filter((expense) => isWithinDateRange(expense.date, fromDate, toDate))
+      .reduce((total, expense) => total + (expense.amount ?? 0), 0),
+    [expenses, fromDate, toDate]
   );
   const totalOutflow = totalCost + totalExpenses;
   const netProfit = totalRevenue - totalOutflow;
@@ -157,6 +185,47 @@ export default function ReportsPage() {
           })}
         </section>
 
+        <section className="mb-8 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-lg font-bold">Report period</h2>
+              <p className="text-sm text-slate-500">Both dates are included in the calculation.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { setFromDate(""); setToDate(""); }}
+              className="text-sm font-semibold text-teal-700 hover:text-teal-900"
+            >
+              Show all dates
+            </button>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="font-semibold text-slate-700">
+              From
+              <input
+                type="date"
+                value={fromDate}
+                max={toDate || undefined}
+                onChange={(event) => setFromDate(event.target.value)}
+                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 font-normal text-slate-900"
+              />
+            </label>
+            <label className="font-semibold text-slate-700">
+              To
+              <input
+                type="date"
+                value={toDate}
+                min={fromDate || undefined}
+                onChange={(event) => setToDate(event.target.value)}
+                className="mt-1 block w-full rounded-lg border border-slate-300 px-3 py-2 font-normal text-slate-900"
+              />
+            </label>
+          </div>
+          <p className="mt-4 text-sm text-slate-500">
+            Showing {completedSales.length} sales and {formatCurrency(totalExpenses)} in expenses.
+          </p>
+        </section>
+
         {error ? (
           <div className="rounded-xl border border-red-200 bg-red-50 p-5 text-red-700">{error}</div>
         ) : loading ? (
@@ -183,6 +252,20 @@ export default function ReportsPage() {
                   <Metric label="Product cost" value={formatCurrency(totalCost)} />
                   <Metric label="Expenses" value={formatCurrency(totalExpenses)} />
                   <Metric label="Net profit" value={formatCurrency(netProfit)} accent />
+                </div>
+                <div className="mt-8 border-t border-slate-200 pt-6">
+                  <h3 className="mb-1 font-bold">Profit sharing</h3>
+                  <p className="mb-4 text-sm text-slate-500">Shares are calculated from net profit for the selected period.</p>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    {profitShares.map((share) => (
+                      <Metric
+                        key={share.name}
+                        label={`${share.name} (${share.percentage}%)`}
+                        value={formatCurrency(netProfit * share.percentage / 100)}
+                        accent
+                      />
+                    ))}
+                  </div>
                 </div>
                 <p className="mt-6 rounded-lg bg-amber-50 p-4 text-sm text-amber-800">
                   Net profit = gross revenue - product cost - expenses. Expenses are currently {formatCurrency(totalExpenses)}.

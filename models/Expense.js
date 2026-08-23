@@ -4,6 +4,8 @@ const ExpenseSchema = new mongoose.Schema(
 	{
 		title: { type: String, required: true, trim: true },
 		amount: { type: Number, required: true, min: 0 },
+		amountUsd: { type: Number, default: 0, min: 0 },
+		exchangeRate: { type: Number, default: 90000, min: 1 },
 		category: { type: String, default: "Other", trim: true },
 		date: { type: Date, default: Date.now, index: true },
 		notes: { type: String, default: "", trim: true },

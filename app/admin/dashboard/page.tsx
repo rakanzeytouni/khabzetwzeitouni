@@ -87,6 +87,7 @@ export default function Dashboard() {
           // Add fallback just in case date is missing in old records
           const saleDate = new Date(sale.date || sale.createdAt || new Date()); 
           if (
+            sale.status === "completed" &&
             saleDate.getMonth() === currentMonth &&
             saleDate.getFullYear() === currentYear
           ) {
@@ -103,7 +104,7 @@ export default function Dashboard() {
         totalCustomers: customersData.total || 0,
         totalStaff: 0, // Default value, can be fetched from user table
         salesTrend: 12, // Percentage increase
-        recentSales: salesData.slice(0, 5),
+        recentSales: salesData.filter((sale: any) => sale.status === "completed").slice(0, 5),
       });
 
       setLoading(false);
