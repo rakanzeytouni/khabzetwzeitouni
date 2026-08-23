@@ -57,7 +57,7 @@ export function proxy(request) {
     
     // صفحات Admin فقط
     if (pathname.startsWith("/admin") && decoded.role !== "admin") {
-      return NextResponse.redirect(new URL("/cashier/pos", request.url));
+      return NextResponse.redirect(new URL("/cashier", request.url));
     }
 
     // صفحات Cashier فقط
