@@ -12,6 +12,9 @@ type Loan = {
   status: "outstanding" | "repaid" | "unpaid";
   notes?: string;
   createdAt: string;
+  cashierName?: string;
+  unpaidAt?: string;
+  repaidAt?: string;
   saleId?: { saleId?: string };
 };
 
@@ -21,17 +24,27 @@ export default function LoansPage() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
   const [interest, setInterest] = useState<Record<string, string>>({});
+  const [role, setRole] = useState<"admin" | "cashier" | null>(null);
 
   const loadLoans = async () => {
-    const response = await fetch("/api/loans");
-    if (response.ok) setLoans(await response.json());
-    setLoading(false);
+    try {
+      const authResponse = await fetch("/api/auth/login");
+      const auth = await authResponse.json();
+      if (!auth.authenticated) return;
+      setRole(auth.user.role);
+      const response = await fetch("/api/loans");
+      if (response.ok) setLoans(await response.json());
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { loadLoans(); }, []);
 
   const updateLoan = async (loan: Loan, action: "repaid" | "unpaid") => {
-    const message = action === "repaid" ? "تأكيد أن القرض تم تسديده؟" : "سيُلغى البيع وتُسجّل كلفة المنتجات كمصروف. متابعة؟";
+    const message = action === "repaid"
+      ? "تأكيد أن القرض تم تسديده؟"
+      : "سيُلغى البيع وتُسجّل كلفة المنتجات كمصروف. متابعة؟";
     if (!window.confirm(message)) return;
     const response = await fetch("/api/loans", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ loanId: loan._id, action, interestAmount: Number(interest[loan._id] || 0) }) });
     if (response.ok) loadLoans();
@@ -50,7 +63,7 @@ export default function LoansPage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-800">إدارة القروض</h1>
             <p className="mt-1 text-gray-600">
-              متابعة المبيعات المؤجلة والتحصيل
+              {role === "cashier" ? "قروضي والتحصيل" : "متابعة المبيعات المؤجلة والتحصيل"}
             </p>
           </div>
           <a
@@ -115,7 +128,17 @@ export default function LoansPage() {
                       {money(loan.principalAmount)}
                     </td>
                     <td className="p-4 text-gray-600">
-                      {new Date(loan.createdAt).toLocaleDateString("ar-LB")}
+                      <span className="block">إنشاء: {new Date(loan.createdAt).toLocaleDateString("ar-LB")}</span>
+                      {loan.unpaidAt && (
+                        <span className="block text-red-600">
+                          غير مدفوع: {new Date(loan.unpaidAt).toLocaleDateString("ar-LB")}
+                        </span>
+                      )}
+                      {loan.repaidAt && (
+                        <span className="block text-green-600">
+                          دُفع: {new Date(loan.repaidAt).toLocaleDateString("ar-LB")}
+                        </span>
+                      )}
                     </td>
                     <td className="p-4">
                       <span
@@ -129,7 +152,7 @@ export default function LoansPage() {
                       </span>
                     </td>
                     <td className="p-4">
-                      {loan.status === "outstanding" ? (
+                      {role === "cashier" && (loan.status === "outstanding" || loan.status === "unpaid") ? (
                         <div className="flex min-w-56 gap-2">
                           <button
                             onClick={() => updateLoan(loan, "repaid")}
@@ -150,15 +173,17 @@ export default function LoansPage() {
                             placeholder="فائدة"
                             className="w-20 rounded border px-2 text-black"
                           />
-                          <button
-                            onClick={() => updateLoan(loan, "unpaid")}
-                            className="rounded bg-red-600 px-3 py-2 text-sm font-bold text-white"
-                          >
-                            غير مدفوع
-                          </button>
+                          {loan.status === "outstanding" && (
+                            <button
+                              onClick={() => updateLoan(loan, "unpaid")}
+                              className="rounded bg-red-600 px-3 py-2 text-sm font-bold text-white"
+                            >
+                              غير مدفوع
+                            </button>
+                          )}
                         </div>
                       ) : (
-                        <span className="text-gray-500">لا يوجد إجراء</span>
+                        <span className="text-gray-500">{role === "admin" ? "للعرض فقط" : "لا يوجد إجراء"}</span>
                       )}
                     </td>
                   </tr>

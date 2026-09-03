@@ -79,6 +79,9 @@ export default function Dashboard() {
       const now = new Date();
       const currentMonth = now.getMonth();
       const currentYear = now.getFullYear();
+      const previousMonthDate = new Date(currentYear, currentMonth - 1, 1);
+      const previousMonth = previousMonthDate.getMonth();
+      const previousMonthYear = previousMonthDate.getFullYear();
 
 
       // Calculate monthly sales
@@ -98,12 +101,29 @@ export default function Dashboard() {
         },
         0
       );
+      const previousMonthSales = salesData.reduce(
+        (total: number, sale: any) => {
+          const saleDate = new Date(sale.date || sale.createdAt || new Date());
+          if (
+            sale.status === "completed" &&
+            saleDate.getMonth() === previousMonth &&
+            saleDate.getFullYear() === previousMonthYear
+          ) {
+            return total + (sale.totalAmount || sale.amount || 0);
+          }
+          return total;
+        },
+        0
+      );
+      const salesTrend = previousMonthSales === 0
+        ? (monthlySales > 0 ? 100 : 0)
+        : ((monthlySales - previousMonthSales) / previousMonthSales) * 100;
 
       setStats({
         monthlySales: monthlySales || 0,
         totalCustomers: customersData.total || 0,
         totalStaff: 0, // Default value, can be fetched from user table
-        salesTrend: 12, // Percentage increase
+        salesTrend,
         recentSales: salesData.filter((sale: any) => sale.status === "completed").slice(0, 5),
       });
 
@@ -119,13 +139,19 @@ export default function Dashboard() {
     label,
     value,
     color,
+    onClick,
   }: {
     icon: any;
     label: string;
     value: string | number;
     color: string;
+    onClick?: () => void;
   }) => (
-    <div className={`bg-white rounded-lg shadow-md p-6 border-l-4 ${color}`}>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`w-full rounded-lg border-l-4 bg-white p-6 text-left shadow-md ${color}${onClick ? " cursor-pointer transition hover:shadow-lg" : ""}`}
+    >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-gray-600 text-sm font-medium">{label}</p>
@@ -133,7 +159,7 @@ export default function Dashboard() {
         </div>
         <Icon />
       </div>
-    </div>
+    </button>
   );
 
   if (loading) {
@@ -200,6 +226,7 @@ export default function Dashboard() {
             label="عدد الزبائن"
             value={stats.totalCustomers}
             color="border-green-500"
+            onClick={() => router.push("/customer")}
           />
           <StatCard
             icon={UsersIcon}

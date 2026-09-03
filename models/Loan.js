@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 const LoanSchema = new mongoose.Schema(
 	{
 		saleId: { type: mongoose.Schema.Types.ObjectId, ref: "Sales", required: true, unique: true },
+		cashierId: { type: mongoose.Schema.Types.ObjectId, ref: "User", index: true },
+		cashierName: { type: String, default: "", trim: true },
 		recipientName: { type: String, required: true, trim: true },
 		recipientPhone: { type: String, default: "", trim: true },
 		loanType: { type: String, required: true, trim: true },

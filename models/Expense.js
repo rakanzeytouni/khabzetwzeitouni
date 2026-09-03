@@ -9,6 +9,7 @@ const ExpenseSchema = new mongoose.Schema(
 		category: { type: String, default: "Other", trim: true },
 		date: { type: Date, default: Date.now, index: true },
 		notes: { type: String, default: "", trim: true },
+		loanId: { type: mongoose.Schema.Types.ObjectId, ref: "Loan", index: true },
 	},
 	{ timestamps: true }
 );

@@ -184,7 +184,7 @@ export default function UpdateMenu() {
             <p className="text-sm sm:text-base text-gray-600 mt-2">إدارة قائمة الطعام والمشروبات</p>
           </div>
           <Link
-            href="/admin/dachboard"
+            href="/admin/dashboard"
             className="w-full sm:w-auto text-center bg-gray-600 hover:bg-gray-700 text-white px-5 py-2 rounded-lg"
           >
             ← العودة

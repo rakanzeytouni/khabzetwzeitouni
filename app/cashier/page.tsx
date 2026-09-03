@@ -54,6 +54,7 @@ export default function Cashier() {
   const [showLoanModal, setShowLoanModal] = useState(false);
   const [receiptToPrint, setReceiptToPrint] = useState<any | null>(null);
   const [addingCustomer, setAddingCustomer] = useState(false);
+  const [showCustomerForm, setShowCustomerForm] = useState(false);
 
 
   useEffect(() => {
@@ -80,11 +81,12 @@ export default function Cashier() {
       const res = await fetch("/api/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ name: customerName }),
       });
 
       if (!res.ok) throw new Error("Failed to add customer");
-      alert("تمت إضافة زبون جديد");
+      setShowCustomerForm(false);
+      alert(`تمت إضافة الزبون ${customerName.trim() || "None"}`);
     } catch (error) {
       console.error("Error adding customer:", error);
       alert("خطأ في إضافة الزبون");
@@ -337,11 +339,17 @@ const uniqueSaleId = `SALE-${Date.now()}`;
               مصروف
             </button>
             <button
-              onClick={addNewCustomer}
+              onClick={() => router.push("/loans")}
+              className="flex items-center justify-center bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-3 sm:px-6 rounded-lg shadow transition duration-200 text-sm sm:text-base"
+            >
+              قروضي
+            </button>
+            <button
+              onClick={() => setShowCustomerForm(true)}
               disabled={addingCustomer}
               className="flex items-center justify-center bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-semibold py-2 px-3 sm:px-6 rounded-lg shadow transition duration-200 text-sm sm:text-base"
             >
-              {addingCustomer ? "جاري الإضافة..." : "زبون جديد"}
+              زبون جديد
             </button>
             <button
               onClick={handleLogout}
@@ -352,6 +360,38 @@ const uniqueSaleId = `SALE-${Date.now()}`;
             </button>
           </div>
         </div>
+
+        {showCustomerForm && (
+          <div className="mb-6 rounded-lg border-r-4 border-green-500 bg-white p-5 shadow-md">
+            <div className="flex flex-wrap items-end gap-3">
+              <label className="min-w-60 flex-1 text-gray-700">
+                اسم الزبون (اختياري)
+                <input
+                  type="text"
+                  value={customerName}
+                  onChange={(event) => setCustomerName(event.target.value)}
+                  placeholder="اتركه فارغاً لإضافة None"
+                  className="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-black outline-none focus:border-green-500"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={addNewCustomer}
+                disabled={addingCustomer}
+                className="rounded-lg bg-green-600 px-5 py-2 font-semibold text-white hover:bg-green-700 disabled:bg-gray-400"
+              >
+                {addingCustomer ? "جاري الإضافة..." : "حفظ الزبون"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowCustomerForm(false)}
+                className="rounded-lg bg-gray-200 px-5 py-2 font-semibold text-gray-700 hover:bg-gray-300"
+              >
+                إلغاء
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Products Section */}

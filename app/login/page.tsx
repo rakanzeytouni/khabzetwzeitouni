@@ -53,7 +53,7 @@ export default function LoginPage() {
   };
  
   return (
-    <div dir="rtl" className="min-h-screen bg-gradient-to-br from-[#f4f1ea] to-[#e8dfd0] flex items-center justify-center p-4">
+    <div dir="rtl" className="min-h-screen bg-linear-to-br from-[#f4f1ea] to-[#e8dfd0] flex items-center justify-center p-4">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
       `}</style>
@@ -136,21 +136,7 @@ export default function LoginPage() {
               )}
             </button>
           </form>
-
-          {/* Demo Accounts */}
-          <div className="mt-6 pt-6 border-t border-[#d1c4a9]">
-            <p className="text-sm text-[#6b7c6b] text-center mb-3">حسابات تجريبية:</p>
-            <div className="space-y-2 text-sm">
-              <div className="bg-[#f4f1ea] p-3 rounded-lg">
-                <p className="text-[#2c3e2c] font-bold">مدير النظام:</p>
-                <p className="text-[#6b7c6b]">admin / admin123</p>
-              </div>
-              <div className="bg-[#f4f1ea] p-3 rounded-lg">
-                <p className="text-[#2c3e2c] font-bold">كاشير:</p>
-                <p className="text-[#6b7c6b]">cashier / cashier123</p>
-              </div>
-            </div>
-          </div>
+          
         </div>
 
         {/* Footer */}

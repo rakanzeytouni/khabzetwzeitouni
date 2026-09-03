@@ -47,7 +47,7 @@ async function seedUsers() {
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-    console.log("✅ Admin user created: admin / admin123");
+
 
     // إنشاء cashier
     const cashierPassword = await bcrypt.hash("cashier123", 10);
