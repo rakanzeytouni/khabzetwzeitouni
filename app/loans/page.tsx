@@ -24,16 +24,22 @@ export default function LoansPage() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loading, setLoading] = useState(true);
   const [interest, setInterest] = useState<Record<string, string>>({});
-  const [role, setRole] = useState<"admin" | "cashier" | null>(null);
+  const [role, setRole] = useState<"admin" | "cashier">("cashier");
 
   const loadLoans = async () => {
     try {
+      const savedRole = window.localStorage.getItem("user-role");
+      if (savedRole === "admin" || savedRole === "cashier") setRole(savedRole);
+
       const authResponse = await fetch("/api/auth/login");
       const auth = await authResponse.json();
       if (!auth.authenticated) return;
       setRole(auth.user.role);
+      window.localStorage.setItem("user-role", auth.user.role);
       const response = await fetch("/api/loans");
       if (response.ok) setLoans(await response.json());
+    } catch {
+      // Keep the locally saved role and cached page usable while offline.
     } finally {
       setLoading(false);
     }
@@ -67,10 +73,10 @@ export default function LoansPage() {
             </p>
           </div>
           <a
-            href="/admin/dashboard"
+            href={role === "admin" ? "/admin/dashboard" : "/cashier"}
             className="rounded bg-gray-700 px-4 py-2 font-semibold text-white"
           >
-            لوحة التحكم
+            {role === "admin" ? "لوحة التحكم" : "العودة إلى الكاشير"}
           </a>
         </div>
         <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

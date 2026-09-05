@@ -162,13 +162,6 @@ export default function Dashboard() {
     </button>
   );
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-xl text-gray-600">جاري التحميل...</p>
-      </div>
-    );
-  }
         const handleLogout = async () => {
     try {
       // 1. منطلب من السيرفر يمسح الـ HTTP-Only Cookie

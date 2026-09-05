@@ -4,8 +4,16 @@ import Product from "@/models/Product";
 export async function GET(req) {
   try {
     await connectDB();
-    const products = await Product.find({ active: true }).sort({ createdAt: -1 });
-    return Response.json(products);
+    const products = await Product.find({ active: true })
+      .select("nameEn nameAr price cost montageCost category image")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    return Response.json(products, {
+      headers: {
+        "Cache-Control": "private, max-age=30, stale-while-revalidate=300",
+      },
+    });
   } catch (error) {
     console.error("Error in GET /api/products:", error);
     return Response.json(

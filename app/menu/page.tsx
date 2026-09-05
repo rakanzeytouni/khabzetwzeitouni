@@ -37,14 +37,6 @@ const Menu = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-[#FBF8EF]">
-        <p className="text-xl text-[#1E4329] font-bold dir-rtl">جاري التحميل...</p>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-[#FBF8EF] py-8 px-4 flex justify-center items-center">
       {/* Outer Card Frame */}

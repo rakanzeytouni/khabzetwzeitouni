@@ -2,8 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import ExpenseModal from "@/components/ExpenseModal";
-import LoanModal from "@/components/LoanModal";
+import dynamic from "next/dynamic";
+
+const ExpenseModal = dynamic(() => import("@/components/ExpenseModal"));
+const LoanModal = dynamic(() => import("@/components/LoanModal"));
 
 interface MenuItem {
   _id: string;
@@ -293,13 +295,6 @@ const uniqueSaleId = `SALE-${Date.now()}`;
     }
   };
 
-  if (loading && products.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-xl text-gray-600">جاري التحميل...</p>
-      </div>
-    );
-  }
     const handleLogout = async () => {
     try {
       // 1. منطلب من السيرفر يمسح الـ HTTP-Only Cookie
@@ -400,17 +395,25 @@ const uniqueSaleId = `SALE-${Date.now()}`;
               <h2 className="text-2xl font-bold text-gray-800 mb-4">المنتجات</h2>
 
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {products.map((product) => (
-                  <button
-                    key={product._id}
-                    onClick={() => addToCart(product)}
-                    className="bg-linear-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-4 rounded-lg transition transform hover:scale-105 text-center"
-                  >
-                    <p className="font-semibold text-lg">{product.nameAr}</p>
-                    <p className="text-sm opacity-90">{product.nameEn}</p>
-                    <p className="text-xl font-bold mt-2">{product.price.toLocaleString()} L.L.</p>
-                  </button>
-                ))}
+                {loading && products.length === 0
+                  ? Array.from({ length: 9 }, (_, index) => (
+                      <div
+                        key={`product-skeleton-${index}`}
+                        aria-hidden="true"
+                        className="h-28 animate-pulse rounded-lg bg-gray-200"
+                      />
+                    ))
+                  : products.map((product) => (
+                      <button
+                        key={product._id}
+                        onClick={() => addToCart(product)}
+                        className="bg-linear-to-b from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white p-4 rounded-lg transition transform hover:scale-105 text-center"
+                      >
+                        <p className="font-semibold text-lg">{product.nameAr}</p>
+                        <p className="text-sm opacity-90">{product.nameEn}</p>
+                        <p className="text-xl font-bold mt-2">{product.price.toLocaleString()} L.L.</p>
+                      </button>
+                    ))}
               </div>
             </div>
           </div>

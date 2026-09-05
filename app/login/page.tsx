@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import Image from "next/image";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,6 +32,8 @@ export default function LoginPage() {
         throw new Error(data.error || "فشل تسجيل الدخول");
       }
 
+      localStorage.setItem("user-role", data.user.role);
+
       // Redirect based on role
       if (data.user.role === "admin") {
         router.push("/admin/dashboard");
@@ -54,17 +56,18 @@ export default function LoginPage() {
  
   return (
     <div dir="rtl" className="min-h-screen bg-linear-to-br from-[#f4f1ea] to-[#e8dfd0] flex items-center justify-center p-4">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
-      `}</style>
-
       <div className="w-full max-w-md">
         {/* Logo & Title */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-40 h-40 rounded-full border-4 border-[#2c3e2c] bg-[#f4f1ea] mb-4 shadow-lg overflow-hidden">
-            <img
+            <Image
               src="/logo.jpeg"
               alt="Restaurant logo"
+              width={160}
+              height={160}
+              loading="eager"
+              fetchPriority="high"
+              decoding="async"
               className="w-full h-full object-cover"
               onError={(e) => {
                 const target = e.currentTarget as HTMLImageElement;
