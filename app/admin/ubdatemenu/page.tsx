@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 
 const EXCHANGE_RATE = 90000;
@@ -22,14 +22,22 @@ interface MenuItem {
   image?: string;
 }
 
+type MenuFormData = Omit<MenuItem, "_id" | "price" | "cost" | "stock"> & {
+  price: number;
+  cost: number;
+  stock: number ;
+};
+
 export default function UpdateMenu() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [descriptionSource, setDescriptionSource] = useState<"en" | "ar" | null>(null);
+  const skipDescriptionTranslation = useRef(false);
 
-  const [formData, setFormData] = useState<MenuItem>({
+  const [formData, setFormData] = useState<MenuFormData>({
     nameEn: "",
     nameAr: "",
     descEn: "",
@@ -44,6 +52,51 @@ export default function UpdateMenu() {
   useEffect(() => {
     fetchMenuItems();
   }, []);
+
+  useEffect(() => {
+    if (skipDescriptionTranslation.current) {
+      skipDescriptionTranslation.current = false;
+      return;
+    }
+
+    if (!descriptionSource) return;
+
+    const sourceText = descriptionSource === "en" ? formData.descEn : formData.descAr;
+    const targetField = descriptionSource === "en" ? "descAr" : "descEn";
+    const controller = new AbortController();
+
+    const timer = window.setTimeout(async () => {
+      if (!sourceText.trim()) {
+        skipDescriptionTranslation.current = true;
+        setFormData((current) => ({ ...current, [targetField]: "" }));
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/translate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: sourceText, source: descriptionSource }),
+          signal: controller.signal,
+        });
+        const data = await response.json();
+
+        if (!response.ok) throw new Error(data.error || "Translation failed");
+
+        skipDescriptionTranslation.current = true;
+        setFormData((current) => ({ ...current, [targetField]: data.translation }));
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          console.error("Translation failed:", error);
+        }
+      }
+    }, 500);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [descriptionSource, formData.descEn, formData.descAr]);
 
   const fetchMenuItems = async () => {
     try {
@@ -68,8 +121,15 @@ export default function UpdateMenu() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    const nextValue = ["price", "cost", "stock"].includes(name) ? parseFloat(value) : value;
-    setFormData((current) => ({ ...current, [name]: nextValue } as MenuItem));
+    if (name === "descEn" || name === "descAr") {
+      setDescriptionSource(name === "descEn" ? "en" : "ar");
+    }
+    const nextValue = ["price", "cost", "stock"].includes(name)
+      ? value === ""
+        ? 0
+        : parseInt(value, 10)
+      : value;
+    setFormData((current) => ({ ...current, [name]: nextValue } as MenuFormData));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -84,7 +144,13 @@ export default function UpdateMenu() {
     try {
       setLoading(true);
       const method = editingId ? "PUT" : "POST";
-      const body = editingId ? { ...formData, _id: editingId } : formData;
+      const body = {
+        ...formData,
+        price: formData.price,
+        cost: formData.cost,
+        stock: formData.stock,
+        ...(editingId ? { _id: editingId } : {}),
+      };
 
       const res = await fetch("/api/products", {
         method,
@@ -106,6 +172,7 @@ export default function UpdateMenu() {
         stock: 0,
         active: true,
       });
+      setDescriptionSource(null);
       setEditingId(null);
       setShowForm(false);
 
@@ -121,6 +188,7 @@ export default function UpdateMenu() {
   };
 
   const handleEdit = (item: MenuItem) => {
+    setDescriptionSource(null);
     setFormData(item);
     setEditingId(item._id || null);
     setShowForm(true);
@@ -156,6 +224,7 @@ export default function UpdateMenu() {
       stock: 0,
       active: true,
     });
+    setDescriptionSource(null);
     setEditingId(null);
     setShowForm(false);
   };
@@ -269,10 +338,10 @@ export default function UpdateMenu() {
                 <input
                   type="number"
                   name="price"
-                  value={formData.price}
+                  value={formData.price || ""}
                   onChange={handleInputChange}
                   placeholder="السعر"
-                  step="0.01"
+                  step="1"
                   min="0"
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                   required
@@ -287,10 +356,10 @@ export default function UpdateMenu() {
                 <input
                   type="number"
                   name="cost"
-                  value={formData.cost}
+                  value={formData.cost || ""}
                   onChange={handleInputChange}
                   placeholder="تكلفة المنتج"
-                  step="0.01"
+                  step="1"
                   min="0"
                   className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
                 />
@@ -319,7 +388,7 @@ export default function UpdateMenu() {
                 <input
                   type="number"
                   name="stock"
-                  value={formData.stock}
+                  value={formData.stock || ""}
                   onChange={handleInputChange}
                   placeholder="المخزون"
                   min="0"

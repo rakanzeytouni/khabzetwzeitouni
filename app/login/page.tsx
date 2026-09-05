@@ -141,7 +141,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <p className="text-center text-[#6b7c6b] mt-6 text-sm">
-          © 2026 خبزة وزيتونة - جميع الحقوق محفوظة
+          &copy; 2026 - All rights reserved - Sahtein
         </p>
       </div>
     </div>
