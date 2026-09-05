@@ -2,6 +2,8 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 
+const ADMIN_ONLY_PATHS = ["/admin", "/report", "/expenses", "/customer"];
+
 export function proxy(request) {
   const token = request.cookies.get("auth-token")?.value;
   const { pathname } = request.nextUrl;
@@ -57,6 +59,13 @@ export function proxy(request) {
     
     // صفحات Admin فقط
     if (pathname.startsWith("/admin") && decoded.role !== "admin") {
+      return NextResponse.redirect(new URL("/cashier", request.url));
+    }
+
+    const isAdminOnlyPath = ADMIN_ONLY_PATHS.some(
+      (adminPath) => pathname === adminPath || pathname.startsWith(`${adminPath}/`)
+    );
+    if (isAdminOnlyPath && decoded.role !== "admin") {
       return NextResponse.redirect(new URL("/cashier", request.url));
     }
 
