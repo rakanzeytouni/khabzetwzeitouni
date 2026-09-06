@@ -1,16 +1,16 @@
 // app/api/auth/login/route.js
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
+import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 export async function POST(req) {
   try {
-    await connectDB();
-    
     const { username, password } = await req.json();
 
-    // Validate input
     if (!username || !password) {
       return NextResponse.json(
         { error: "الرجاء إدخال اسم المستخدم وكلمة المرور" },
@@ -18,9 +18,12 @@ export async function POST(req) {
       );
     }
 
-    // Find user
-    const user = await User.findOne({ username, active: true });
-    
+    await connectDB();
+
+    const user = await User.findOne({ username: username.trim(), active: true })
+      .select("username password role")
+      .lean();
+
     if (!user) {
       return NextResponse.json(
         { error: "اسم المستخدم أو كلمة المرور غير صحيحة" },
@@ -28,9 +31,8 @@ export async function POST(req) {
       );
     }
 
-    // Check password
-    const isPasswordValid = await user.comparePassword(password);
-    
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
     if (!isPasswordValid) {
       return NextResponse.json(
         { error: "اسم المستخدم أو كلمة المرور غير صحيحة" },

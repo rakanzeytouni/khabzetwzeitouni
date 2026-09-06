@@ -1,6 +1,6 @@
 // scripts/seedUsers.js
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
+import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";

@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Restaurant Menu",
     short_name: "Menu",
-    start_url: "/menu",
+    start_url: "/login",
     scope: "/",
     display: "standalone",
     orientation: "portrait-primary",
