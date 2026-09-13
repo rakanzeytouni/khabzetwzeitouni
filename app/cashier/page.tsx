@@ -147,6 +147,28 @@ export default function Cashier() {
   const paidAmountInLbp = paymentCurrency === "usd" ? amountPaid * EXCHANGE_RATE : amountPaid;
   const change = Math.max(0, paidAmountInLbp - totalAmount);
 
+  const handleAmountPaidChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const rawValue = event.target.value.replace(/[^0-9.]/g, "");
+
+    if (rawValue === "") {
+      setAmountPaid(0);
+      return;
+    }
+
+    const dotCount = (rawValue.match(/\./g) || []).length;
+    if (dotCount > 1) {
+      return;
+    }
+
+    const numericValue = Number.parseFloat(rawValue);
+    if (!Number.isFinite(numericValue)) {
+      setAmountPaid(0);
+      return;
+    }
+
+    setAmountPaid(numericValue);
+  };
+
   const completeSale = async () => {
     if (cart.length === 0) {
       alert("السلة فارغة");
@@ -540,8 +562,9 @@ const uniqueSaleId = `SALE-${Date.now()}`;
                   </label>
                   <input
                     type="number"
+                    inputMode="decimal"
                     value={amountPaid === 0 ? "" : amountPaid}
-                    onChange={(e) => setAmountPaid(parseFloat(e.target.value) || 0)}
+                    onChange={handleAmountPaidChange}
                     className="w-full text-black font-medium border border-gray-400 rounded px-3 py-2"
                     min="0"
                     step={paymentCurrency === "usd" ? "0.01" : "1"}

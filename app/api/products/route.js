@@ -5,7 +5,7 @@ export async function GET(req) {
   try {
     await connectDB();
     const products = await Product.find({ active: true })
-      .select("nameEn nameAr price cost montageCost category image")
+      .select("nameEn nameAr descEn descAr price cost montageCost category image")
       .sort({ createdAt: -1 })
       .lean();
 

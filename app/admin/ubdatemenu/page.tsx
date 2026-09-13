@@ -192,6 +192,10 @@ export default function UpdateMenu() {
     setFormData(item);
     setEditingId(item._id || null);
     setShowForm(true);
+
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   };
 
   const handleDelete = async (id: string) => {

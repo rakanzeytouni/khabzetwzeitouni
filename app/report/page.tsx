@@ -8,6 +8,8 @@ type Expense = {
   _id?: string;
   amount?: number;
   date?: string;
+  category?: string;
+  title?: string;
 };
 
 type Product = {
@@ -69,6 +71,12 @@ const getSaleCost = (sale: Sale, productCosts: Map<string, number>) =>
       total + (item.unitCost ?? item.cost ?? productCosts.get(item.productId ?? "") ?? 0) * (item.quantity ?? 0),
     0
   );
+
+const isStockPurchaseExpense = (expense: Expense) => {
+  const category = (expense.category ?? "").trim();
+  const title = (expense.title ?? "").trim();
+  return category === "شراء بضاعة" || title === "شراء بضاعة" || category === "buying goods" || title === "buying goods";
+};
 
 export default function ReportsPage() {
   const [reportType, setReportType] = useState<ReportType>("activity");
@@ -135,6 +143,7 @@ export default function ReportsPage() {
   const totalExpenses = useMemo(
     () => expenses
       .filter((expense) => isWithinDateRange(expense.date, fromDate, toDate))
+      .filter((expense) => !isStockPurchaseExpense(expense))
       .reduce((total, expense) => total + (expense.amount ?? 0), 0),
     [expenses, fromDate, toDate]
   );
